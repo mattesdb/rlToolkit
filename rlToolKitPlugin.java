@@ -10,13 +10,16 @@ import javax.annotation.Nullable;
 
 //Runelite API
 import net.runelite.api.Client;
+import net.runelite.api.RenderOverview;
 import net.runelite.api.MenuAction;
+import net.runelite.api.events.GameTick;
 import net.runelite.api.events.MenuOptionClicked;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.config.ConfigManager;
+import net.runelite.api.events.GameTick;
 import net.runelite.client.ui.overlay.OverlayManager;
 import net.runelite.api.Actor;
 import net.runelite.api.Player;
@@ -26,6 +29,7 @@ import net.runelite.client.menus.MenuManager;
 import net.runelite.client.eventbus.Subscribe;
 
 //Java Libraries
+import java.awt.*;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
@@ -61,12 +65,8 @@ public class rlToolKitPlugin extends Plugin{
     //Tracked tile queue, this represents FIFO list of tiles our target has been on
     Queue<pointTime> ptQ = new LinkedList<>();
     //pointer to our designated actor
-    public Actor trackedPlayer = null;
-
-    //Context Menu options
-    private static final String TAG = "Tag";
-    private static final String UNTAG = "Un-tag";
-    private static final String UNTAG_ALL = "Un-tag-All";
+    public Player trackedPlayer = null;
+    public boolean tracking = false;
 
 
     //Method to test if animationID is interrupted by performing actions
@@ -77,11 +77,7 @@ public class rlToolKitPlugin extends Plugin{
     public LocalPoint logPoint(Player target){
         return target.getLocalLocation();
     }
-    //Assign our designated actor
-    public int assignTarget(Actor a){
-        this.trackedPlayer = a;
-        return 1;
-    }
+
 
     //Custom Menu Entry
     private static final String ACQUIRE_TARGET = "Acquire Target";
@@ -95,12 +91,38 @@ public class rlToolKitPlugin extends Plugin{
     @Subscribe
     public void onMenuOptionClicked(MenuOptionClicked event){
         if (event.getMenuAction() == MenuAction.RUNELITE_PLAYER && event.getMenuOption().equals(ACQUIRE_TARGET)){
-            Player p = client.getCachedPlayers()[event.getId()];
+            trackedPlayer = client.getCachedPlayers()[event.getId()];
+            if (trackedPlayer == null){
+                return;
+            }else if (tracking == false){
+                tracking = true;
+            }else{
+                tracking = false;
+            }
+        }
+    }
+    @Subscribe
+    public void onGameTick(GameTick event){
+        if (tracking){
+            //Create our point and time and add it to our Queue
+            LocalPoint local = trackedPlayer.getLocalLocation();
+            int t = Integer.parseInt(event.toString());
+            tileCheck(local,t);
 
         }
     }
-
-
-
+    public void tileCheck(LocalPoint local,int t){
+        if (ptQ.size()==0){
+            ptQ.add(new pointTime(local,t));
+        }else if(ptQ.peek().getLP()==local){
+            ptQ.poll();
+            ptQ.add(new pointTime(local,t));
+        }else if (ptQ.size()>100){
+            ptQ.remove();
+            ptQ.add(new pointTime(local,t));
+        }else{
+            ptQ.add(new pointTime(local,t));
+        }
+    }
 
 }
