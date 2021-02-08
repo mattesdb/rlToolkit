@@ -7,7 +7,6 @@ import com.google.inject.Provides;
 import javax.inject.Provider;
 import javax.inject.Inject;
 import javax.annotation.Nullable;
-
 //Runelite API
 import net.runelite.api.Client;
 import net.runelite.api.RenderOverview;
@@ -42,51 +41,48 @@ import java.util.Set;
         loadWhenOutdated = true
 )
 public class rlToolKitPlugin extends Plugin{
-    //This injects our rlToolKit.java so we can retrieve/update data in our config window
+    //Config Inject
     @Inject
     private rlToolKitConfig config;
-    //we can access our config class through the use of the 'config' keyword
-    //Config window does not appear without code below
+    //Config window
     @Provides
     rlToolKitConfig provideConfig(ConfigManager configManager){
         return configManager.getConfig(rlToolKitConfig.class);
     }
-    //^^^^^^^
 
     //MenuManager
     @Inject
     private Provider<MenuManager> menuManager;
-
+    //overlay
+    @Inject
+    private rlToolKitOverlay overlay;
+    //Overlay Manager
+    @Inject
+    private OverlayManager overlayManager;
     @Inject
     @Nullable
     private Client client;
 
-
-    //Tracked tile queue, this represents FIFO list of tiles our target has been on
+    //Tracked tile queue
     Queue<pointTime> ptQ = new LinkedList<>();
-    //pointer to our designated actor
+    //Tracking vars
     public Player trackedPlayer = null;
     public boolean tracking = false;
 
-
-    //Method to test if animationID is interrupted by performing actions
-    public int printAnimation(Player target){
-        return target.getAnimation();
-    }
-    //gets the local point of our target
-    public LocalPoint logPoint(Player target){
-        return target.getLocalLocation();
-    }
-
-
     //Custom Menu Entry
     private static final String ACQUIRE_TARGET = "Acquire Target";
-    //StartUp Plugin Override
+    //StartUp Plugin
     @Override
     protected void startUp() throws Exception{
         menuManager.get().addPlayerMenuItem(ACQUIRE_TARGET);
+        overlayManager.add(overlay);
     }
 
+    //Clean up
+    @Override
+    protected void shutDown() throws Exception{
+        overlayManager.remove(overlay);
+    }
     //Logic for custom menu entry onClick()
     @Subscribe
     public void onMenuOptionClicked(MenuOptionClicked event){
@@ -101,17 +97,19 @@ public class rlToolKitPlugin extends Plugin{
             }
         }
     }
+
     @Subscribe
     public void onGameTick(GameTick event){
         if (tracking){
-            //Create our point and time and add it to our Queue
+            //Create point and try add
             LocalPoint local = trackedPlayer.getLocalLocation();
-            int t = Integer.parseInt(event.toString());
+            String t = event.toString();
             tileCheck(local,t);
 
         }
     }
-    public void tileCheck(LocalPoint local,int t){
+
+    public void tileCheck(LocalPoint local,String t){
         if (ptQ.size()==0){
             ptQ.add(new pointTime(local,t));
         }else if(ptQ.peek().getLP()==local){
@@ -123,6 +121,16 @@ public class rlToolKitPlugin extends Plugin{
         }else{
             ptQ.add(new pointTime(local,t));
         }
+    }
+    //gets the local point of our target
+    public LocalPoint logPoint(Player target){
+        return target.getLocalLocation();
+    }
+
+
+    //Method to test if animationID is interrupted by performing actions
+    public int printAnimation(Player target){
+        return target.getAnimation();
     }
 
 }
