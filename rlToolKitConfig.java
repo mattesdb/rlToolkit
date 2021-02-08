@@ -17,5 +17,5 @@ public interface rlToolKitConfig extends Config {
                     name = "GODMODE",
                     description = "never die to pkers again!"
             )
-    default boolean string_variable_name() { return false; }
+    default boolean booleanConfig() { return false; }
 }
