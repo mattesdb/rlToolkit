@@ -21,7 +21,7 @@ public class rlToolKitPlugin extends Plugin{
     private rlToolKitConfig config;
 
     @Provides
-    rlToolKitConfig provideCOnfig(ConfigManager configManager){
+    rlToolKitConfig provideConfig(ConfigManager configManager){
         return configManager.getConfig(rlToolKitConfig.class);
     }
 
