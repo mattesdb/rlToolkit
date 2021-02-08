@@ -9,15 +9,15 @@ public class pointTime {
 
     //constructor
     public pointTime(LocalPoint x, int t){
-        self.lp = x;
-        self.tick = t;
+        this.lp = x;
+        this.tick = t;
     }
     //get the LocalPoint
     public LocalPoint getLP(){
-        return self.lp;
+        return this.lp;
     }
     //get the GameTick
     public int getTick(){
-        return self.t;
+        return this.tick;
     }
 }
