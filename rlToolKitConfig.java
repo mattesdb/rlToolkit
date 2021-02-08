@@ -2,7 +2,6 @@ package net.runelite.client.plugins.rlToolKit;
 
 
 //Mandatory imports for Config
-import net.runelite.api.Actor;
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
