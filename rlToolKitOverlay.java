@@ -3,6 +3,7 @@ package net.runelite.client.plugins.rlToolKit;
 import net.runelite.api.Client;
 import net.runelite.api.Perspective;
 import net.runelite.api.coords.LocalPoint;
+import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.rlToolKit.rlToolKitConfig;
 import net.runelite.client.ui.overlay.*;
 import javax.inject.Inject;
@@ -25,19 +26,25 @@ public class rlToolKitOverlay extends Overlay {
     public Dimension render(Graphics2D graphics){
         if(plugin.tracking==true){
             for(pointTime pt:plugin.ptQ){
-                renderTile(graphics,pt.getLP(),pt.getTick());
+                if (plugin.tick - pt.getTick() < 50){
+                    renderTile(graphics,pt.getLP(),new Color(36,238,36,1));
+                }else if(plugin.tick - pt.getTick() < 75){
+                    renderTile(graphics,pt.getLP(),new Color(238,137,36,1));
+                }else{
+                    renderTile(graphics,pt.getLP(),new Color(158,10,10,1));
+            }
             }
         }
         return null;
     }
-    private void renderTile(final Graphics2D graphics, final LocalPoint dest, final String t) {
+    private void renderTile(final Graphics2D graphics, final WorldPoint dest, Color c){
         if (dest == null) {
             return;
         }
-        final Polygon poly = Perspective.getCanvasTilePoly(client, dest);
+        final Polygon poly = Perspective.getCanvasTilePoly(client, new LocalPoint(dest.getX(),dest.getY()));
         if (poly == null) {
             return;
         }
-        OverlayUtil.renderPolygon(graphics, poly, new Color(15,15,15,15));
+        OverlayUtil.renderPolygon(graphics, poly, c);
     }
 }

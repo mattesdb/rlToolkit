@@ -11,6 +11,7 @@ import javax.annotation.Nullable;
 import net.runelite.api.Client;
 import net.runelite.api.RenderOverview;
 import net.runelite.api.MenuAction;
+import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.MenuOptionClicked;
 import net.runelite.api.coords.LocalPoint;
@@ -26,7 +27,6 @@ import net.runelite.api.AnimationID;
 import net.runelite.client.plugins.rlToolKit.pointTime;
 import net.runelite.client.menus.MenuManager;
 import net.runelite.client.eventbus.Subscribe;
-
 //Java Libraries
 import java.awt.*;
 import java.util.LinkedList;
@@ -68,6 +68,8 @@ public class rlToolKitPlugin extends Plugin{
     //Tracking vars
     public Player trackedPlayer = null;
     public boolean tracking = false;
+    public boolean ticking = false;
+    public long tick = 0;
 
     //Custom Menu Entry
     private static final String ACQUIRE_TARGET = "Acquire Target";
@@ -82,6 +84,11 @@ public class rlToolKitPlugin extends Plugin{
     @Override
     protected void shutDown() throws Exception{
         overlayManager.remove(overlay);
+        menuManager.get().removePlayerMenuItem(ACQUIRE_TARGET);
+        ptQ.removeAll(ptQ);
+        tracking=false;
+        trackedPlayer=null;
+        ticking=false;
     }
     //Logic for custom menu entry onClick()
     @Subscribe
@@ -92,8 +99,12 @@ public class rlToolKitPlugin extends Plugin{
                 return;
             }else if (tracking == false){
                 tracking = true;
+                ticking=true;
+                config.playerEntity() = trackedPlayer.toString();
             }else{
                 tracking = false;
+                ticking=false;
+                ptQ.removeAll(ptQ);
             }
         }
     }
@@ -101,15 +112,14 @@ public class rlToolKitPlugin extends Plugin{
     @Subscribe
     public void onGameTick(GameTick event){
         if (tracking){
-            //Create point and try add
-            LocalPoint local = trackedPlayer.getLocalLocation();
-            String t = event.toString();
-            tileCheck(local,t);
+            tick++;
+            WorldPoint local = trackedPlayer.getWorldLocation();
+            tileCheck(local,tick);
 
         }
     }
 
-    public void tileCheck(LocalPoint local,String t){
+    public void tileCheck(WorldPoint local,long t){
         if (ptQ.size()==0){
             ptQ.add(new pointTime(local,t));
         }else if(ptQ.peek().getLP()==local){
@@ -122,11 +132,6 @@ public class rlToolKitPlugin extends Plugin{
             ptQ.add(new pointTime(local,t));
         }
     }
-    //gets the local point of our target
-    public LocalPoint logPoint(Player target){
-        return target.getLocalLocation();
-    }
-
 
     //Method to test if animationID is interrupted by performing actions
     public int printAnimation(Player target){
